@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+audit_engine.log
+tests/__pycache__/
+src/__pycache__/
+venv/

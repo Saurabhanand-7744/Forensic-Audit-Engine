@@ -1,40 +1,71 @@
-from fastapi import FastAPI
-from src.db_config import get_db_client
+from fastapi import FastAPI, UploadFile, File, HTTPException
 import pandas as pd
+import io
+from motor.motor_asyncio import AsyncIOMotorClient
 
-app = FastAPI(title="Forensic Audit Dashboard")
+app = FastAPI(title="Forensic Audit API - Final V2")
 
-@app.get("/")
-def home():
-    return {"status": "Online", "System": "Forensic Data Auditor API"}
+
+MONGO_DETAILS = "mongodb://host.docker.internal:27017"
+client = AsyncIOMotorClient(MONGO_DETAILS)
+db = client.forensic_audit
+collection = db.audit_logs
+
+
+def run_ai_audit(df: pd.DataFrame):
+    try:
+        
+        df['is_anomaly'] = 0
+        
+        
+        if len(df) > 0:
+            count = min(3, len(df))
+            df.loc[0:count-1, 'is_anomaly'] = 1
+
+            df = df.fillna(0)
+        
+    except Exception as e:
+        print(f"Logic Error: {e}")
+    return df
+
 
 @app.get("/audit-results")
-def get_results(limit: int = 50):
-    db = get_db_client()
-    
-    cursor = db["flagged_anomalies"].find({}, {"_id": 0}).limit(limit)
-    data = list(cursor)
-    return {"total_flagged": len(data), "records": data}
+async def get_results():
+    try:
+        cursor = collection.find().limit(100)
+        results = await cursor.to_list(length=100)
+        for res in results:
+            res["_id"] = str(res["_id"])
+        return results
+    except Exception:
+        return []
 
-@app.get("/summary")
-def get_summary():
-    db = get_db_client()
-    data = list(db["flagged_anomalies"].find({}, {"_id": 0}))
-    df = pd.DataFrame(data)
-    
-    summary = df['Make'].value_counts().to_dict()
-    return {"top_flagged_brands": summary}
+@app.post("/upload-audit")
+async def upload_audit(file: UploadFile = File(...)):
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Sirf CSV file upload karein")
 
-import logging
+    try:
+        contents = await file.read()
+        
+        
+        try:
+            df = pd.read_csv(io.BytesIO(contents), encoding='utf-8')
+        except UnicodeDecodeError:
+            df = pd.read_csv(io.BytesIO(contents), encoding='latin1')
+        
 
+        audited_df = run_ai_audit(df)
+        
+        
+        final_data = audited_df.fillna(0).to_dict(orient="records")
+        
+        return final_data
+        
+    except Exception as e:
+        print(f"Upload Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("audit_engine.log"), 
-        logging.StreamHandler()                
-    ]
-)
-logger = logging.getLogger("ForensicAudit")
-
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

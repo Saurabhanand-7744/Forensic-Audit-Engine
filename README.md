@@ -1,16 +1,24 @@
-An automated financial anomaly detection system built with FastAPI, MongoDB, and Scikit-Learn.
+AI-Powered Forensic Audit Engine
+Detecting financial fraud in today’s digital world is like finding a needle in a haystack. I built this project to provide auditors with a "Smart Assistant" that can scan thousands of transactions in seconds and highlight suspicious patterns that manual checks often miss.
 
-- **Anomaly Detection:** Uses Isolation Forest to find outliers in transaction data.
-- **Explainable AI (XAI):** Integrated SHAP to explain *why* a transaction was flagged.
-- **Async API:** High-performance endpoints built with FastAPI.
-- **Containerized:** Fully Dockerized for "plug-and-play" deployment.
-- **Tested:** Robust test suite using Pytest.
+This tool doesn't just display data; it uses Machine Learning to pinpoint transactions that are "outliers" or abnormal based on historical patterns.
+Key Highlights
+Smart Red-Flagging: I implemented the Isolation Forest algorithm, which is highly effective at spotting outliers in financial datasets.
 
-- **Backend:** Python (FastAPI)
-- **Database:** MongoDB
-- **AI/ML:** Scikit-Learn, SHAP
-- **DevOps:** Docker, Pytest
+Explainable AI (XAI): Flagging a fraud isn't enough; you need to know why. I integrated SHAP to provide transparency into which features (like amount, location, or frequency) triggered the alert.
 
-1. **Docker:** `docker build -t forensic-auditor-app .`
-2. **Run:** `docker run -p 8000:8000 forensic-auditor-app`
-3. **Docs:** Access `http://localhost:8000/docs` for interactive API testing.
+Live CSV Analysis: You can drag-and-drop any financial CSV into the sidebar. The FastAPI backend processes it instantly and updates the dashboard in real-time.
+
+One-Click Excel Reports: Once the audit is done, you can export all findings into a professional Excel (.xlsx) report for management or senior stakeholders.
+Tech Stack
+I kept the architecture modular to ensure the system remains scalable:
+
+Frontend: Streamlit (For a clean, interactive UI)
+
+Backend: FastAPI (For high-speed, asynchronous processing)
+
+Database: MongoDB (To store and manage audit logs)
+
+AI/ML: Scikit-Learn & SHAP
+
+DevOps: Docker (For easy, "plug-and-play" local setup)
